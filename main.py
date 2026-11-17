@@ -1,18 +1,6 @@
-"""
-Вариант 13. Интерактивный анализ набора данных.
-
-Паттерны:
-  ЛР1 — Одиночка (AppConfig), Строитель (AnalysisQueryBuilder)
-  ЛР2 — Абстрактная фабрика (ChartFactory), Прототип (AnalysisQuery.clone)
-  ЛР3 — Адаптер (Csv/Json → Dataset), Мост (Chart + ChartRenderer)
-  ЛР4 — Компоновщик (MetricNode), Декоратор (ChartDecorator)
-  ЛР5 — Фасад (AnalysisApp), Приспособленец (StyleFlyweightFactory)
-"""
-
 from __future__ import annotations
 
 import copy
-import csv
 import json
 import tkinter as tk
 from abc import ABC, abstractmethod
@@ -30,12 +18,8 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 DEFAULT_CSV = DATA_DIR / "sales.csv"
 
 
-# ---------------------------------------------------------------------------
-# ЛР1 — Одиночка
-# ---------------------------------------------------------------------------
-
 class AppConfig:
-    """Глобальные настройки приложения (Singleton)."""
+    """Глобальные настройки приложения."""
 
     _instance: Optional["AppConfig"] = None
 
@@ -48,14 +32,6 @@ class AppConfig:
             cls._instance.default_group = "region"
         return cls._instance
 
-    @classmethod
-    def reset_for_tests(cls):
-        cls._instance = None
-
-
-# ---------------------------------------------------------------------------
-# ЛР1 — Строитель + ЛР2 — Прототип
-# ---------------------------------------------------------------------------
 
 @dataclass
 class AnalysisQuery:
@@ -69,7 +45,7 @@ class AnalysisQuery:
     chart_kind: str = "bar"
 
     def clone(self) -> "AnalysisQuery":
-        """Прототип: создаёт независимую копию запроса."""
+        """Создаёт независимую копию запроса."""
         return copy.deepcopy(self)
 
     def describe(self) -> str:
@@ -117,12 +93,8 @@ class AnalysisQueryBuilder:
         return self._query.clone()
 
 
-# ---------------------------------------------------------------------------
-# ЛР3 — Адаптер: единый Dataset из CSV / JSON
-# ---------------------------------------------------------------------------
-
 class Dataset(ABC):
-    """Целевой интерфейс набора данных."""
+    """Набор данных."""
 
     @abstractmethod
     def as_dataframe(self) -> pd.DataFrame:
@@ -134,7 +106,7 @@ class Dataset(ABC):
 
 
 class CsvDatasetAdapter(Dataset):
-    """Адаптирует CSV-файл к интерфейсу Dataset."""
+    """Читает CSV как набор данных."""
 
     def __init__(self, path: Path):
         self.path = Path(path)
@@ -148,7 +120,7 @@ class CsvDatasetAdapter(Dataset):
 
 
 class JsonDatasetAdapter(Dataset):
-    """Адаптирует JSON-файл (список объектов) к интерфейсу Dataset."""
+    """Читает JSON (список объектов) как набор данных."""
 
     def __init__(self, path: Path):
         self.path = Path(path)
@@ -174,10 +146,6 @@ def load_dataset(path: Path) -> Dataset:
     raise ValueError(f"Неподдерживаемый формат: {suffix}")
 
 
-# ---------------------------------------------------------------------------
-# ЛР5 — Приспособленец: общие стили графиков
-# ---------------------------------------------------------------------------
-
 @dataclass(frozen=True)
 class ChartStyle:
     color: str
@@ -187,7 +155,7 @@ class ChartStyle:
 
 
 class StyleFlyweightFactory:
-    """Кэширует и переиспользует стили отрисовки."""
+    """Хранит общие стили отрисовки и отдаёт один и тот же объект повторно."""
 
     def __init__(self):
         self._styles: dict[str, ChartStyle] = {}
@@ -207,12 +175,8 @@ class StyleFlyweightFactory:
 STYLE_FLYWEIGHTS = StyleFlyweightFactory()
 
 
-# ---------------------------------------------------------------------------
-# ЛР3 — Мост: абстракция графика + реализация отрисовки
-# ---------------------------------------------------------------------------
-
 class ChartRenderer(ABC):
-    """Реализация отрисовки (сторона моста)."""
+    """Отрисовка графика на осях Matplotlib."""
 
     @abstractmethod
     def render(self, ax, labels: list[str], values: list[float], style: ChartStyle, title: str):
@@ -243,7 +207,7 @@ class PieRenderer(ChartRenderer):
 
 
 class Chart(ABC):
-    """Абстракция графика (сторона моста)."""
+    """График: выбирает способ отрисовки и стиль."""
 
     def __init__(self, renderer: ChartRenderer, style_name: str = "default"):
         self.renderer = renderer
@@ -268,12 +232,8 @@ class PieChart(Chart):
         super().__init__(PieRenderer(), "pie")
 
 
-# ---------------------------------------------------------------------------
-# ЛР2 — Абстрактная фабрика + фабричный метод семейства графиков
-# ---------------------------------------------------------------------------
-
 class ChartFactory(ABC):
-    """Интерфейс фабрики семейства графиков."""
+    """Создаёт графики одного семейства."""
 
     @abstractmethod
     def create_bar(self) -> Chart:
@@ -299,7 +259,7 @@ class ChartFactory(ABC):
 
 
 class MatplotlibChartFactory(ChartFactory):
-    """Конкретная фабрика графиков на Matplotlib."""
+    """Графики на Matplotlib."""
 
     def create_bar(self) -> Chart:
         return BarChart()
@@ -310,10 +270,6 @@ class MatplotlibChartFactory(ChartFactory):
     def create_pie(self) -> Chart:
         return PieChart()
 
-
-# ---------------------------------------------------------------------------
-# ЛР4 — Декоратор: обогащение результата анализа
-# ---------------------------------------------------------------------------
 
 @dataclass
 class AnalysisResult:
@@ -355,14 +311,13 @@ class BasicChartView(ChartView):
             ax.text(0.5, 0.5, result.title, ha="center", va="center")
             ax.axis("off")
             return
-        # chart kind берётся из extras или bar по умолчанию
         kind = result.extras.get("chart_kind", "bar")
         chart = self.factory.create(kind)
         chart.draw(ax, result.labels, result.values, result.title)
 
 
 class ChartDecorator(ChartView):
-    """Базовая обёртка, сохраняющая интерфейс ChartView."""
+    """Обёртка над представлением графика."""
 
     def __init__(self, wrapped: ChartView):
         self._wrapped = wrapped
@@ -394,10 +349,6 @@ class StatsOverlayDecorator(ChartDecorator):
             ax.legend(loc="best")
 
 
-# ---------------------------------------------------------------------------
-# ЛР4 — Компоновщик: дерево метрик / групп отчёта
-# ---------------------------------------------------------------------------
-
 class MetricNode(ABC):
     @abstractmethod
     def evaluate(self, df: pd.DataFrame) -> float:
@@ -423,7 +374,7 @@ class LeafMetric(MetricNode):
 
 
 class MetricGroup(MetricNode):
-    """Компоновщик: группа метрик ведёт себя как одна метрика."""
+    """Группа метрик, которая считается как одна метрика."""
 
     def __init__(self, name: str):
         self.name = name
@@ -469,10 +420,6 @@ def apply_query(df: pd.DataFrame, query: AnalysisQuery) -> pd.DataFrame:
     return result
 
 
-# ---------------------------------------------------------------------------
-# Аналитическое ядро
-# ---------------------------------------------------------------------------
-
 class Analyzer:
     def __init__(self, factory: Optional[ChartFactory] = None):
         self.factory = factory or MatplotlibChartFactory()
@@ -491,7 +438,6 @@ class Analyzer:
         self.last_query = query
         result = self.view.build(self.df, query)
         result.extras.setdefault("chart_kind", query.chart_kind)
-        # сводка по дереву метрик
         filtered = apply_query(self.df, query)
         summary = {
             node.label(): node.evaluate(filtered)
@@ -502,10 +448,6 @@ class Analyzer:
         self.last_result = result
         return result
 
-
-# ---------------------------------------------------------------------------
-# GUI
-# ---------------------------------------------------------------------------
 
 class AnalysisWindow:
     def __init__(self, analyzer: Analyzer):
@@ -534,11 +476,11 @@ class AnalysisWindow:
 
         ttk.Button(top, text="Открыть CSV/JSON", command=self._open_file).pack(side=tk.LEFT, padx=4)
         ttk.Button(top, text="Анализ", command=self._analyze).pack(side=tk.LEFT, padx=4)
-        ttk.Button(top, text="Сохранить прототип", command=self._save_prototype).pack(side=tk.LEFT, padx=4)
-        ttk.Button(top, text="Загрузить прототип", command=self._load_prototype).pack(side=tk.LEFT, padx=4)
+        ttk.Button(top, text="Сохранить запрос", command=self._save_prototype).pack(side=tk.LEFT, padx=4)
+        ttk.Button(top, text="Загрузить запрос", command=self._load_prototype).pack(side=tk.LEFT, padx=4)
         ttk.Button(top, text="Сохранить график", command=self._save_chart).pack(side=tk.LEFT, padx=4)
 
-        filters = ttk.LabelFrame(self.root, text="Параметры запроса (Строитель)", padding=8)
+        filters = ttk.LabelFrame(self.root, text="Параметры запроса", padding=8)
         filters.pack(fill=tk.X, padx=8, pady=4)
 
         self.region_combo = self._add_combo(filters, "Регион", self.region_var, 0)
@@ -645,12 +587,12 @@ class AnalysisWindow:
         ]
         if "sum" in result.extras:
             lines.append(
-                f"Статистика декоратора: сумма={result.extras['sum']:.2f}, "
+                f"Статистика: сумма={result.extras['sum']:.2f}, "
                 f"среднее={result.extras['avg']:.2f}, макс={result.extras['max']:.2f}"
             )
         tree = result.extras.get("metric_tree", {})
         if tree:
-            lines.append("Дерево метрик (компоновщик): " + ", ".join(f"{k}={v:.0f}" for k, v in tree.items()))
+            lines.append("Сводка: " + ", ".join(f"{k}={v:.0f}" for k, v in tree.items()))
         self.summary.delete("1.0", tk.END)
         self.summary.insert(tk.END, "\n".join(lines))
 
@@ -661,11 +603,11 @@ class AnalysisWindow:
 
     def _save_prototype(self):
         self._prototype_query = self._current_query().clone()
-        self.status_var.set(f"Прототип сохранён: {self._prototype_query.describe()}")
+        self.status_var.set(f"Запрос сохранён: {self._prototype_query.describe()}")
 
     def _load_prototype(self):
         if self._prototype_query is None:
-            messagebox.showinfo("Прототип", "Сначала сохраните прототип запроса")
+            messagebox.showinfo("Запрос", "Сначала сохраните запрос")
             return
         q = self._prototype_query.clone()
         self.metric_var.set(q.metric)
@@ -675,7 +617,7 @@ class AnalysisWindow:
         self.category_var.set(q.category or "Все")
         self.channel_var.set(q.channel or "Все")
         self._analyze()
-        self.status_var.set("Прототип загружен и применён")
+        self.status_var.set("Запрос загружен и применён")
 
     def _save_chart(self):
         if self.analyzer.last_result is None:
@@ -694,12 +636,8 @@ class AnalysisWindow:
         self.root.mainloop()
 
 
-# ---------------------------------------------------------------------------
-# ЛР5 — Фасад
-# ---------------------------------------------------------------------------
-
 class AnalysisApp:
-    """Упрощённый интерфейс запуска приложения анализа данных."""
+    """Запуск приложения анализа данных."""
 
     def __init__(self, data_path: Optional[Path] = None):
         self.analyzer = Analyzer(MatplotlibChartFactory())
@@ -712,7 +650,7 @@ class AnalysisApp:
 
 
 def export_demo_chart(output: Path, query: Optional[AnalysisQuery] = None) -> Path:
-    """Вспомогательный экспорт графика без GUI (для отчётов)."""
+    """Сохраняет график в файл без окна."""
     analyzer = Analyzer()
     analyzer.load(DEFAULT_CSV)
     query = query or (
