@@ -1,0 +1,19 @@
+@startuml
+!include uml-style.puml
+left to right direction
+
+class AppConfig <<одиночка>> {
+  {static} - ~_instance : AppConfig
+  + window_title : str
+  + window_size : str
+  + default_metric : str
+  + default_group : str
+  {static} + ~_~_new~_~_() : AppConfig
+}
+
+class AnalysisWindow <<клиент>> {
+  + config : AppConfig
+}
+
+AnalysisWindow --> AppConfig : единственный экземпляр
+@enduml

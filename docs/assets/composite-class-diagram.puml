@@ -1,0 +1,28 @@
+@startuml
+!include uml-style.puml
+
+abstract class MetricNode <<компонент>> {
+  + {abstract} evaluate(df) : float
+  + {abstract} label() : str
+}
+
+class LeafMetric <<лист>> {
+  + name : str
+  + column : str
+  + evaluate(df) : float
+  + label() : str
+}
+
+class MetricGroup <<компоновщик>> {
+  + name : str
+  - children : list
+  + add(node) : MetricGroup
+  + evaluate(df) : float
+  + label() : str
+  + walk()
+}
+
+MetricNode <|-- LeafMetric
+MetricNode <|-- MetricGroup
+MetricGroup o--> "0..*" MetricNode : содержит
+@enduml

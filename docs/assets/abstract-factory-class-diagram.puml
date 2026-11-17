@@ -1,0 +1,30 @@
+@startuml
+!include uml-style.puml
+
+abstract class ChartFactory <<абстрактная фабрика>> {
+  + {abstract} create_bar() : Chart
+  + {abstract} create_line() : Chart
+  + {abstract} create_pie() : Chart
+  + create(kind) : Chart
+}
+
+class MatplotlibChartFactory <<конкретная фабрика>> {
+  + create_bar() : Chart
+  + create_line() : Chart
+  + create_pie() : Chart
+}
+
+abstract class Chart <<абстрактный продукт>> {
+  + draw(ax, labels, values, title)
+}
+
+class BarChart <<продукт>>
+class LineChart <<продукт>>
+class PieChart <<продукт>>
+
+ChartFactory <|-- MatplotlibChartFactory
+Chart <|-- BarChart
+Chart <|-- LineChart
+Chart <|-- PieChart
+MatplotlibChartFactory ..> Chart : создаёт
+@enduml

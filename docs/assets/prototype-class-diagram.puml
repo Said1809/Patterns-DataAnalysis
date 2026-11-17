@@ -1,0 +1,22 @@
+@startuml
+!include uml-style.puml
+left to right direction
+
+class AnalysisWindow <<клиент>> {
+  - _prototype_query : AnalysisQuery
+  + _save_prototype()
+  + _load_prototype()
+}
+
+class AnalysisQuery <<прототип>> {
+  + metric : str
+  + group_by : str
+  + region : str
+  + category : str
+  + channel : str
+  + chart_kind : str
+  + clone() : AnalysisQuery
+}
+
+AnalysisWindow --> AnalysisQuery : хранит копию\nи вызывает clone()
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+!include uml-style.puml
+left to right direction
+
+class StyleFlyweightFactory <<фабрика приспособленцев>> {
+  - _styles : dict
+  + get_style(name) : ChartStyle
+}
+
+class ChartStyle <<приспособленец>> {
+  + color : str
+  + edgecolor : str
+  + alpha : float
+  + title_size : int
+}
+
+class Chart <<клиент>> {
+  + renderer : ChartRenderer
+  + style : ChartStyle
+  + draw(ax, labels, values, title)
+}
+
+StyleFlyweightFactory "1" o-- "*" ChartStyle : кэширует
+Chart --> ChartStyle : общий стиль
+Chart ..> StyleFlyweightFactory : запрашивает стиль
+@enduml

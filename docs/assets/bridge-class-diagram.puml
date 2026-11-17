@@ -1,0 +1,37 @@
+@startuml
+!include uml-style.puml
+
+abstract class Chart <<абстракция>> {
+  + renderer : ChartRenderer
+  + style : ChartStyle
+  + draw(ax, labels, values, title)
+}
+
+class BarChart <<уточнение>>
+class LineChart <<уточнение>>
+class PieChart <<уточнение>>
+
+abstract class ChartRenderer <<реализация>> {
+  + {abstract} render(ax, labels, values, style, title)
+}
+
+class BarRenderer <<реализация>> {
+  + render(ax, labels, values, style, title)
+}
+
+class LineRenderer <<реализация>> {
+  + render(ax, labels, values, style, title)
+}
+
+class PieRenderer <<реализация>> {
+  + render(ax, labels, values, style, title)
+}
+
+Chart <|-- BarChart
+Chart <|-- LineChart
+Chart <|-- PieChart
+ChartRenderer <|-- BarRenderer
+ChartRenderer <|-- LineRenderer
+ChartRenderer <|-- PieRenderer
+Chart o--> ChartRenderer : мост
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+!include uml-style.puml
+
+class AnalysisApp <<фасад>> {
+  + analyzer : Analyzer
+  + window : AnalysisWindow
+  + run()
+}
+
+class Analyzer <<подсистема>> {
+  + factory : ChartFactory
+  + view : ChartView
+  + dataset : Dataset
+  + load(path)
+  + run(query) : AnalysisResult
+}
+
+class AnalysisWindow <<подсистема>> {
+  + analyzer : Analyzer
+  + run()
+}
+
+AnalysisApp --> Analyzer : создаёт
+AnalysisApp --> AnalysisWindow : создаёт и запускает
+@enduml

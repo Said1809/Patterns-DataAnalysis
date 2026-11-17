@@ -1,0 +1,32 @@
+@startuml
+!include uml-style.puml
+
+abstract class Dataset <<целевой интерфейс>> {
+  + {abstract} as_dataframe() : DataFrame
+  + {abstract} columns() : list
+}
+
+class CsvDatasetAdapter <<адаптер>> {
+  + path : Path
+  - _df : DataFrame
+  + as_dataframe() : DataFrame
+  + columns() : list
+}
+
+class JsonDatasetAdapter <<адаптер>> {
+  + path : Path
+  - _df : DataFrame
+  + as_dataframe() : DataFrame
+  + columns() : list
+}
+
+class Analyzer <<клиент>> {
+  + dataset : Dataset
+  + load(path)
+  + run(query) : AnalysisResult
+}
+
+Dataset <|-- CsvDatasetAdapter
+Dataset <|-- JsonDatasetAdapter
+Analyzer --> Dataset : использует
+@enduml

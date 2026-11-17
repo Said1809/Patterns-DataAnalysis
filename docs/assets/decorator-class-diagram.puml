@@ -1,0 +1,30 @@
+@startuml
+!include uml-style.puml
+
+abstract class ChartView <<компонент>> {
+  + {abstract} build(df, query) : AnalysisResult
+  + {abstract} draw(ax, result)
+}
+
+class BasicChartView <<конкретный компонент>> {
+  + factory : ChartFactory
+  + build(df, query) : AnalysisResult
+  + draw(ax, result)
+}
+
+class ChartDecorator <<декоратор>> {
+  - _wrapped : ChartView
+  + build(df, query) : AnalysisResult
+  + draw(ax, result)
+}
+
+class StatsOverlayDecorator <<конкретный декоратор>> {
+  + build(df, query) : AnalysisResult
+  + draw(ax, result)
+}
+
+ChartView <|-- BasicChartView
+ChartView <|-- ChartDecorator
+ChartDecorator <|-- StatsOverlayDecorator
+ChartDecorator o--> ChartView : оборачивает
+@enduml

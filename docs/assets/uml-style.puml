@@ -1,0 +1,35 @@
+!pragma layout smetana
+skinparam dpi 200
+skinparam shadowing false
+skinparam roundcorner 0
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam padding 4
+skinparam nodesep 36
+skinparam ranksep 48
+skinparam backgroundColor white
+hide circle
+hide empty members
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #1C2430
+  HeaderBackgroundColor #E6EEF8
+  FontColor #111827
+  AttributeFontColor #1F2937
+  FontName Arial
+  FontSize 14
+  AttributeFontName Arial
+  AttributeFontSize 12
+  StereotypeFontSize 11
+  StereotypeFontColor #334155
+}
+
+skinparam arrow {
+  Color #1C2430
+  FontColor #1C2430
+  FontName Arial
+  FontSize 12
+  Thickness 1
+}

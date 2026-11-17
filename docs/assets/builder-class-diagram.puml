@@ -1,0 +1,34 @@
+@startuml
+!include uml-style.puml
+left to right direction
+
+class AnalysisWindow <<клиент>> {
+  + _current_query() : AnalysisQuery
+  + _analyze()
+}
+
+class AnalysisQueryBuilder <<строитель>> {
+  - _query : AnalysisQuery
+  + metric(name) : AnalysisQueryBuilder
+  + group_by(name) : AnalysisQueryBuilder
+  + region(value) : AnalysisQueryBuilder
+  + category(value) : AnalysisQueryBuilder
+  + channel(value) : AnalysisQueryBuilder
+  + chart(kind) : AnalysisQueryBuilder
+  + build() : AnalysisQuery
+}
+
+class AnalysisQuery <<продукт>> {
+  + metric : str
+  + group_by : str
+  + region : str
+  + category : str
+  + channel : str
+  + chart_kind : str
+  + clone() : AnalysisQuery
+  + describe() : str
+}
+
+AnalysisWindow ..> AnalysisQueryBuilder : использует
+AnalysisQueryBuilder --> AnalysisQuery : создаёт
+@enduml
